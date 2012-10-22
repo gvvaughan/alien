@@ -4,26 +4,26 @@ local dll = alien.load "alientest"
 
 do
   io.write(".")
-  local f = dll._testfunc_i_bhilfdll
-  f:types("int", "byte", "short", "int", "long", "float", "double", "longlong")
-  local result = f(string.byte("x"), 1, 3, 4, 5, 6, 7)
-  assert(result == 146)
+  local f = dll._testfunc_i_bhilpfdll
+  f:types("int", "byte", "short", "int", "long", "ptrdiff_t", "float", "double", "longlong")
+  local result = f(string.byte("x"), 1, 3, 4, 5, 6, 7, 8)
+  assert(result == 154)
 end
 
 do
   io.write(".")
-  local f = dll._testfunc_i_bhilfdll
-  f:types{ ret = "int", "byte", "short", "int", "long", "float", "double", "longlong" }
-  local result = f(string.byte("x"), 1, 3, 4, 5, 6, 7)
-  assert(result == 146)
+  local f = dll._testfunc_i_bhilpfdll
+  f:types{ ret = "int", "byte", "short", "int", "long", "ptrdiff_t", "float", "double", "longlong" }
+  local result = f(string.byte("x"), 1, 3, 4, 5, 6, 7, 8)
+  assert(result == 154)
 end
 
 do
   io.write(".")
-  local f = dll._testfunc_i_bhilfdll
-  f:types{ "byte", "short", "int", "long", "float", "double", "longlong" }
-  local result = f(string.byte("x"), 1, 3, 4, 5, 6, 7)
-  assert(result == 146)
+  local f = dll._testfunc_i_bhilpfdll
+  f:types{ "byte", "short", "int", "long", "ptrdiff_t", "float", "double", "longlong" }
+  local result = f(string.byte("x"), 1, 3, 4, 5, 6, 7, 8)
+  assert(result == 154)
 end
 
 do
@@ -203,37 +203,37 @@ end
 
 do
   io.write(".")
-  local f = dll._testfunc_i_bhilfdll
-  f:types("int", "byte", "short", "int", "long", "float", "double", "longlong")
-  local result = f(1, 2, 3, 4, 5, 6, 7)
-  assert(result == 28)
-  local result = f(-1, -2, -3, -4, -5, -6, -7)
-  assert(result == -28)
-  f:types("short", "byte", "short", "int", "long", "float", "double", "longlong")
-  local result = f(1, 2, 3, 4, 5, 6, 7)
-  assert(result == 28)
-  local result = f(1, 2, 3, 0x10004, 5.0, 6.0, 7)
-  assert(result == 28)
+  local f = dll._testfunc_i_bhilpfdll
+  f:types("int", "byte", "short", "int", "long", "ptrdiff_t", "float", "double", "longlong")
+  local result = f(1, 2, 3, 4, 5, 6, 7, 8)
+  assert(result == 36)
+  local result = f(-1, -2, -3, -4, -5, -6, -7, -8)
+  assert(result == -36)
+  f:types("short", "byte", "short", "int", "long", "ptrdiff_t", "float", "double", "longlong")
+  local result = f(1, 2, 3, 4, 5, 6, 7, 8)
+  assert(result == 36)
+  local result = f(1, 2, 3, 0x10004, 5, 6.0, 7.0, 8)
+  assert(result == 36)
 end
 
 do
   io.write(".")
-  local f = dll._testfunc_f_bhilfdll
-  f:types("float", "byte", "short", "int", "long", "float", "double", "longlong")
-  local result = f(1, 2, 3, 4, 5.0, 6.0, 7)
-  assert(result == 28)
-  local result = f(-1, -2, -3, -4, -5, -6, -7)
-  assert(result == -28)
+  local f = dll._testfunc_f_bhilpfdll
+  f:types("float", "byte", "short", "int", "long", "ptrdiff_t", "float", "double", "longlong")
+  local result = f(1, 2, 3, 4, 5, 6.0, 7.0, 8)
+  assert(result == 36)
+  local result = f(-1, -2, -3, -4, -5, -6, -7, -8)
+  assert(result == -36)
 end
 
 do
   io.write(".")
-  local f = dll._testfunc_d_bhilfdll
-  f:types("double", "byte", "short", "int", "long", "float", "double", "longlong")
-  local result = f(1, 2, 3, 4, 5.0, 6.0, 7)
-  assert(result == 28)
-  local result = f(-1, -2, -3, -4, -5, -6, -7)
-  assert(result == -28)
+  local f = dll._testfunc_d_bhilpfdll
+  f:types("double", "byte", "short", "int", "long", "ptrdiff_t", "float", "double", "longlong")
+  local result = f(1, 2, 3, 4, 5, 6.0, 7.0, 8)
+  assert(result == 36)
+  local result = f(-1, -2, -3, -4, -5, -6, -7, -8)
+  assert(result == -36)
 end
 
 do
@@ -263,7 +263,7 @@ do
   local qsort = dll.my_qsort
   qsort:types("void", "pointer", "int", "int", "callback")
   local chars = alien.buffer("spam, spam, and spam")
-  qsort(chars, chars:len(), alien.sizeof("char"), compare)
+  qsort(chars, chars:strlen(), alien.sizeof("char"), compare)
   assert(chars:tostring() == "   ,,aaaadmmmnpppsss")
 end
 
@@ -274,7 +274,7 @@ do
   local qsort = dll.my_qsort
   qsort:types("void", "pointer", "int", "int", "callback")
   local chars = alien.buffer("spam, spam, and spam")
-  qsort(chars, chars:len(), alien.sizeof("char"), compare)
+  qsort(chars, chars:strlen(), alien.sizeof("char"), compare)
   assert(chars:tostring() == "   ,,aaaadmmmnpppsss")
 end
 
@@ -335,6 +335,15 @@ local types = { "char", "short", "int", "long" }
 do
   io.write(".")
   alien.buffer()
+end
+
+do
+  io.write(".")
+  local buf = alien.buffer()
+  buf:realloc (0)
+  buf = alien.buffer(0)
+  assert(buf:tostring() == "")
+  assert(buf:strlen() == 0)
 end
 
 for _, t in ipairs(types) do
@@ -472,7 +481,7 @@ do
   io.write(".")
   local buf = alien.buffer(4)
   buf:realloc(8)
-  assert(buf.size == 8)
+  assert(#buf == 8)
 end
 
 io.write(".")

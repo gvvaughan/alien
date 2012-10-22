@@ -10,14 +10,15 @@ code without having to write, compile and link a C binding from the
 library to Lua. In other words, it lets you write extensions that call
 out to native code using just Lua.
 
-Be careful when you use Alien: I tried to make it as safe as possible,
+Be careful when you use Alien: care has been taken to make it safe,
 but it is still very easy to crash Lua if you make a mistake. Alien
 itself is not as robust as a standard Lua extension, but you can use
 it to write extensions that won't crash if you code them well.
 
-Alien works on Unix-based systems and Windows. It has been tested on Linux x86, 
-Linux x64, Linux ARM, FreeBSD x86, Windows x86, OS X x86, and OS X PPC. The Windows
-binary uses MSVCR80.DLL for compatibility with LuaBinaries.
+Alien works on Unix-based systems and Windows. It has been tested on
+Linux x86, Linux x86_64, Linux ARM, FreeBSD x86, Windows x86, OS X
+x86, and OS X PPC. The Windows binary uses MSVCR80.DLL for
+compatibility with LuaBinaries.
 
 Installing Alien
 ----------------
@@ -31,7 +32,29 @@ the test suite (`tests`) you can run the suite with:
 
     lua -l luarocks.require test_alien.lua
 
-Alien installs one modules, `alien`.
+Alien uses the GNU build system. For detailed instructions on
+installations that do not use LuaRocks, see INSTALL in the 
+distribution. 
+
+For a quick start, if you checked out sources from [Github](http://github.com/mascarenhas/alien) (skip this
+step if you downloaded the .zip in the Downloads section):
+
+  ./bootstrap
+
+Then run:
+
+  ./configure && make [&& make install]
+
+You may need to supply non-default paths (e.g. if you are using a
+system that supports more than one version of Lua). For example, on Debian or Ubuntu:
+
+  CPPFLAGS='-I/usr/include/lua5.1' ./configure --libdir=/usr/local/lib/lua/5.1 --datadir=/usr/local/share/lua$
+
+To run some tests:
+
+  make check
+
+Alien installs one module, `alien`.
 
 Basic Usage
 -----------
@@ -60,13 +83,14 @@ exported function with *libref.funcname*. For example:
 
 To use a function you first have to tell Alien the function prototype,
 using *func:types(ret_type, arg_types...)*, where the types are one of
-the following strings: "void", "int", "uint", "double", "char", "string",
-"pointer", "ref int", "ref uint", "ref double", "ref char", "callback", "short", "ushort",
-"byte", "long", "ulong", "longlong", "ulonglong" and "float". Most correspond directly to C types;
-*byte* is a signed char, *string* is *const char\**, *pointer* is *void\**,
-*callback* is a generic function pointer, and *ref char*, *ref int*
-and *ref double* are by reference versions of the C types. Continuing
-the previous example:
+the following strings: "void", "byte", "char", "short", "ushort",
+"int", "uint", "long", "ulong", "ptrdiff\_t", "size\_t", "float",
+"double", "string", "pointer", "ref char", "ref int", "ref uint", "ref
+double", "longlong", "ulonglong" and "callback". Most correspond
+directly to C types; *byte* is a signed char, *string* is *const
+char\**, *pointer* is *void\**, *callback* is a generic function
+pointer, and *ref char*, *ref int* and *ref double* are by reference
+versions of the C types. Continuing the previous example:
 
     > def.puts:types("int", "string")
     > def.puts("foo")
@@ -99,8 +123,9 @@ You have to pass a value even if the function does not use it, as you
 can see above.
 
 In most Lua implementations, "longlong" and "ulonglong" won't fit in a
-Lua number, so automatic conversion will sometimes fail. However, as
-long as you perform no computation on a long long, its value will be
+Lua number, so automatic conversion will sometimes fail; on 64-bit
+machines the same is true of "ptrdiff\_t" and "size\_t". However, as
+long as you perform no computation on such a value, its value will be
 preserved, so you can receive it from C and pass it back to C without
 worrying.
 
@@ -142,7 +167,7 @@ it will use this userdata as the buffer (be careful with that).
 After making a buffer you can pass it in place of any argument of
 *string* or *pointer* type.
 
-`buf.size` gives its size in bytes, while `buf:len()` returns the
+`#buf` gives its size in bytes, while `buf:strlen()` returns the
 result of calling `strlen` on the buffer.
 
 You can access the i-th character of a buffer with `buf[i]`, and you can
@@ -167,6 +192,8 @@ The second argument gives the offset to start at within the buffer, and defaults
 
 To get a pointer to a buffer, use `buf:topointer(offset)`; the argument is optional, defaulting to 1.
 
+To turn a pointer into a buffer offset, use `buf:tooffset(pointer)`.
+
 You can reallocate a buffer using `buf:realloc(newsize)`. This uses the current Lua state's allocation
 function.
 
@@ -182,7 +209,8 @@ An example of how to use a buffer:
     >
 
 Alien also provides `alien.memmove` and `alien.memset`, which work exactly like the C functions
-of the same name, and can be used on buffers or other memory.
+of the same name, and can be used on buffers or other memory. `alien.memmove` can take a string as
+its second (source) argument.
 
 Arrays
 ------
@@ -363,7 +391,7 @@ example, using *qsort*:
     qsort:types("void", "pointer", "int", "int", "callback")
     
     local chars = alien.buffer("spam, spam, and spam")
-    qsort(chars, chars:len(), alien.sizeof("char"), cmp_cb)
+    qsort(chars, chars:strlen(), alien.sizeof("char"), cmp_cb)
     assert(chars:tostring() == "   ,,aaaadmmmnpppsss")
 
 The *qsort* function sorts an array in-place, so we have to use a
@@ -469,8 +497,15 @@ name is stolen from Common Lisp FFIs.
 Changelog
 ---------
 
-* 0.6.0
-  * feature release
+* 0.7.0: feature release
+  * replace buffer's size field with a __len metamethod
+  * rename buffer:len to buffer:strlen to avoid confusion
+
+* 0.6.1: feature release
+  * add support for size\_t and ptrdiff\_t types.
+  * add buffer:tooffset method to turn pointers into buffer offsets
+
+* 0.6.0: feature release
   * add alien.memmove; make alien.memset work (previously it called memcpy by mistake)
   * make buffers resizable
   * add long long support
@@ -481,8 +516,7 @@ Changelog
   * add alien.version
   * minor updates to documentation
 
-* 0.5.1
-  * bugfix release
+* 0.5.1: bugfix release
   * support for Lua 5.2
   * per-library function cache, instead of global (can load
     two functions with the same name from different libraries)
@@ -528,7 +562,7 @@ License
 
 Alien's uses the MIT license, reproduced below:
 
-Copyright (c) 2008-2009 Fabio Mascarenhas
+Copyright (c) 2008-2012 Fabio Mascarenhas
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
